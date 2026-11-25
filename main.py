@@ -17,11 +17,21 @@ assert len(ENTRY) <= 32, "entry must be at most 32 characters"
 
 
 def write_entry(directory):
-    """Write ENTRY as raw UTF-8 bytes, no trailing newline."""
+    """Write ENTRY as raw UTF-8 bytes, no trailing newline, then verify it.
+
+    Reads the file back and checks the bytes and the 32-character gate, so a
+    truncated or mistyped write fails loudly instead of submitting a bad entry.
+    """
     os.makedirs(directory, exist_ok=True)
     target = os.path.join(directory, "entry.txt")
     with open(target, "wb") as handle:
         handle.write(ENTRY_BYTES)
+    with open(target, "rb") as handle:
+        written = handle.read()
+    if written != ENTRY_BYTES:
+        raise SystemExit("entry.txt does not match the entry")
+    if len(written.decode("utf-8")) > 32:
+        raise SystemExit("entry exceeds the 32-character limit")
 
 
 def main():
